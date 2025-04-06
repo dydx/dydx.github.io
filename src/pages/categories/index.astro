@@ -1,0 +1,85 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { SITE_TITLE, SITE_DESCRIPTION } from '../../consts';
+
+// Get all unique categories from blog posts
+const posts = await getCollection('blog');
+const categories = [...new Set(posts.map(post => post.data.category).filter(Boolean))].sort();
+
+// Count posts for each category
+const categoryCounts = categories.reduce((acc, category) => {
+  const count = posts.filter(post => post.data.category === category).length;
+  acc[category] = count;
+  return acc;
+}, {});
+---
+
+<html lang="en">
+	<head>
+		<BaseHead title={`Categories | ${SITE_TITLE}`} description={SITE_DESCRIPTION} />
+		<style>
+			main {
+				width: 960px;
+				max-width: calc(100% - 2em);
+				margin: 0 auto;
+				padding: 3em 1em;
+			}
+			h1 {
+				text-align: center;
+				margin-bottom: 1em;
+			}
+			.categories-container {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 1em;
+				justify-content: center;
+			}
+			.category {
+				background-color: var(--accent);
+				color: rgb(var(--background));
+				padding: 0.5em 1em;
+				border-radius: 6px;
+				font-size: 1em;
+				display: flex;
+				align-items: center;
+				gap: 0.5em;
+				text-decoration: none;
+				transition: all 0.2s ease;
+				font-weight: bold;
+				text-transform: uppercase;
+			}
+			.category:hover {
+				background-color: var(--accent-dark);
+				transform: translateY(-2px);
+			}
+			.category-count {
+				background-color: rgba(var(--background), 0.2);
+				border-radius: 50%;
+				width: 24px;
+				height: 24px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 0.8em;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1>Categories</h1>
+			<div class="categories-container">
+				{categories.map(category => (
+					<a class="category" href={`/categories/${category.toLowerCase()}`}>
+						{category}
+						<span class="category-count">{categoryCounts[category]}</span>
+					</a>
+				))}
+			</div>
+		</main>
+		<Footer />
+	</body>
+</html>

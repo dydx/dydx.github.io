@@ -3,47 +3,281 @@ import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+import { getCollection } from 'astro:content';
+import FormattedDate from '../components/FormattedDate.astro';
+
+// Get recent posts
+const posts = (await getCollection('blog'))
+	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+	.slice(0, 3);
+
+// Get categories
+const allPosts = await getCollection('blog');
+const categories = [...new Set(allPosts.map(post => post.data.category).filter(Boolean))].sort();
+const categoryCounts = categories.reduce((acc, category) => {
+  const count = allPosts.filter(post => post.data.category === category).length;
+  acc[category] = count;
+  return acc;
+}, {});
+
+// Get popular tags
+const allTags = allPosts.flatMap(post => post.data.tags || []);
+const tagCounts = allTags.reduce((acc, tag) => {
+  acc[tag] = (acc[tag] || 0) + 1;
+  return acc;
+}, {});
+const popularTags = Object.entries(tagCounts)
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 8)
+  .map(([tag]) => tag);
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
 		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+		<style>
+			.hero {
+				padding: 4rem 0;
+				text-align: center;
+				background-color: rgb(var(--background-secondary));
+				margin-bottom: 2rem;
+				border-bottom: 1px solid rgba(var(--gray), 0.1);
+			}
+			.hero h1 {
+				margin-bottom: 0.5rem;
+				font-size: 3rem;
+			}
+			.hero .tagline {
+				font-size: 1.2rem;
+				color: rgb(var(--gray));
+				margin-bottom: 2rem;
+			}
+			.cta {
+				background-color: var(--accent);
+				color: rgb(var(--background));
+				padding: 0.8rem 1.5rem;
+				border-radius: 8px;
+				text-decoration: none;
+				font-weight: bold;
+				display: inline-block;
+				margin-top: 1rem;
+				transition: all 0.2s ease;
+			}
+			.cta:hover {
+				background-color: var(--accent-dark);
+				transform: translateY(-2px);
+			}
+			.content-grid {
+				display: grid;
+				grid-template-columns: 2fr 1fr;
+				gap: 2rem;
+				max-width: 1200px;
+				margin: 0 auto;
+				padding: 0 1rem;
+			}
+			.recent-posts h2, .sidebar h2 {
+				margin-bottom: 1.5rem;
+				position: relative;
+				padding-bottom: 0.5rem;
+			}
+			.recent-posts h2::after, .sidebar h2::after {
+				content: '';
+				position: absolute;
+				bottom: 0;
+				left: 0;
+				width: 100px;
+				height: 3px;
+				background-color: var(--accent);
+			}
+			.post-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+				gap: 2rem;
+			}
+			.post-card {
+				background-color: rgb(var(--background-secondary));
+				border-radius: 8px;
+				overflow: hidden;
+				transition: transform 0.2s ease, box-shadow 0.2s ease;
+				height: 100%;
+				display: flex;
+				flex-direction: column;
+			}
+			.post-card:hover {
+				transform: translateY(-5px);
+				box-shadow: var(--box-shadow);
+			}
+			.post-content {
+				padding: 1.5rem;
+				display: flex;
+				flex-direction: column;
+				flex-grow: 1;
+			}
+			.post-title {
+				margin: 0 0 0.5rem 0;
+				font-size: 1.5rem;
+			}
+			.post-date {
+				color: rgb(var(--gray));
+				font-size: 0.9rem;
+				margin-bottom: 0.8rem;
+			}
+			.post-desc {
+				color: rgb(var(--gray-dark));
+				margin-bottom: 1rem;
+				flex-grow: 1;
+			}
+			.post-category {
+				display: inline-block;
+				background-color: var(--accent);
+				color: rgb(var(--background));
+				padding: 0.3em 0.8em;
+				border-radius: 4px;
+				font-size: 0.8em;
+				font-weight: bold;
+				text-transform: uppercase;
+				margin-bottom: 0.5em;
+			}
+			.post-tags {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.5rem;
+				margin-top: auto;
+			}
+			.post-tag {
+				background-color: rgba(var(--gray-light), 0.7);
+				color: rgb(var(--gray-dark));
+				padding: 0.3em 0.8em;
+				border-radius: 4px;
+				font-size: 0.8em;
+			}
+			.tag-list {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.5rem;
+				margin-bottom: 2rem;
+			}
+			.tag-item {
+				background-color: rgb(var(--background-secondary));
+				color: rgb(var(--gray-dark));
+				padding: 0.5rem 1rem;
+				border-radius: 4px;
+				font-size: 0.9rem;
+				display: flex;
+				align-items: center;
+				gap: 0.5rem;
+				text-decoration: none;
+				transition: all 0.2s ease;
+			}
+			.tag-item:hover {
+				background-color: var(--accent);
+				color: rgb(var(--background));
+			}
+			.category-list {
+				margin-bottom: 2rem;
+			}
+			.category-item {
+				display: flex;
+				justify-content: space-between;
+				padding: 0.8rem 0;
+				border-bottom: 1px solid rgba(var(--gray), 0.1);
+				text-decoration: none;
+				color: rgb(var(--gray-dark));
+				transition: color 0.2s ease;
+			}
+			.category-item:hover {
+				color: var(--accent);
+			}
+			.category-count {
+				background-color: rgba(var(--gray-light), 0.7);
+				color: rgb(var(--gray-dark));
+				padding: 0.2rem 0.6rem;
+				border-radius: 4px;
+				font-size: 0.8rem;
+			}
+			
+			@media (max-width: 900px) {
+				.content-grid {
+					grid-template-columns: 1fr;
+				}
+				.hero h1 {
+					font-size: 2.5rem;
+				}
+			}
+		</style>
 	</head>
 	<body>
 		<Header />
-		<main>
-			<h1>🧑‍🚀 Hello, Astronaut!</h1>
-			<p>
-				Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This
-				template serves as a lightweight, minimally-styled starting point for anyone looking to build
-				a personal website, blog, or portfolio with Astro.
-			</p>
-			<p>
-				This template comes with a few integrations already configured in your
-				<code>astro.config.mjs</code> file. You can customize your setup with
-				<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like Tailwind,
-				React, or Vue to your project.
-			</p>
-			<p>Here are a few ideas on how to get started with the template:</p>
-			<ul>
-				<li>Edit this page in <code>src/pages/index.astro</code></li>
-				<li>Edit the site header items in <code>src/components/Header.astro</code></li>
-				<li>Add your name to the footer in <code>src/components/Footer.astro</code></li>
-				<li>Check out the included blog posts in <code>src/content/blog/</code></li>
-				<li>Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code></li>
-			</ul>
-			<p>
-				Have fun! If you get stuck, remember to
-				<a href="https://docs.astro.build/">read the docs</a>
-				or <a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-			</p>
-			<p>
-				Looking for a blog template with a bit more personality? Check out
-				<a href="https://github.com/Charca/astro-blog-template">astro-blog-template</a>
-				by <a href="https://twitter.com/Charca">Maxi Ferreira</a>.
-			</p>
-		</main>
+		
+		<section class="hero">
+			<h1>{SITE_TITLE}</h1>
+			<p class="tagline">{SITE_DESCRIPTION}</p>
+			<a href="/blog" class="cta">Explore All Posts</a>
+		</section>
+		
+		<div class="content-grid">
+			<section class="recent-posts">
+				<h2>Recent Posts</h2>
+				<div class="post-grid">
+					{
+						posts.map((post) => (
+							<a href={`/blog/${post.id}/`} class="post-card">
+								<div class="post-content">
+									{post.data.category && <span class="post-category">{post.data.category}</span>}
+									<h3 class="post-title">{post.data.title}</h3>
+									<p class="post-date"><FormattedDate date={post.data.pubDate} /></p>
+									<p class="post-desc">{post.data.description}</p>
+									{post.data.tags && post.data.tags.length > 0 && (
+										<div class="post-tags">
+											{post.data.tags.slice(0, 3).map((tag) => (
+												<span class="post-tag">#{tag}</span>
+											))}
+										</div>
+									)}
+								</div>
+							</a>
+						))
+					}
+				</div>
+			</section>
+			
+			<aside class="sidebar">
+				<div class="categories">
+					<h2>Categories</h2>
+					<div class="category-list">
+						{categories.map((category) => (
+							<a href={`/categories/${category.toLowerCase()}`} class="category-item">
+								<span>{category}</span>
+								<span class="category-count">{categoryCounts[category]}</span>
+							</a>
+						))}
+					</div>
+				</div>
+				
+				<div class="tags">
+					<h2>Popular Tags</h2>
+					<div class="tag-list">
+						{popularTags.map((tag) => (
+							<a href={`/tags/${tag}`} class="tag-item">
+								#{tag}
+							</a>
+						))}
+					</div>
+				</div>
+				
+				<div class="about">
+					<h2>About</h2>
+					<p>
+						I'm a DevOps and SRE professional passionate about cloud technologies, 
+						infrastructure as code, and building reliable systems. This blog documents 
+						my technical adventures and things I learn along the way.
+					</p>
+					<a href="/about" class="cta">Learn More</a>
+				</div>
+			</aside>
+		</div>
+		
 		<Footer />
 	</body>
 </html>

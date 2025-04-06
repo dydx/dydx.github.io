@@ -1,0 +1,183 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import FormattedDate from '../../components/FormattedDate.astro';
+import { SITE_TITLE } from '../../consts';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  
+  // Get all unique categories
+  const uniqueCategories = [...new Set(posts.map(post => post.data.category).filter(Boolean))];
+  
+  // Create a path for each category, lowercased for the URL
+  return uniqueCategories.map(category => {
+    // Filter posts that have this category
+    const filteredPosts = posts.filter(post => 
+      post.data.category === category
+    ).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+    
+    return {
+      params: { category: category.toLowerCase() },
+      props: { posts: filteredPosts, category },
+    };
+  });
+}
+
+const { posts, category } = Astro.props;
+---
+
+<html lang="en">
+	<head>
+		<BaseHead title={`${category} | ${SITE_TITLE}`} description={`Browse all posts in the ${category} category`} />
+		<style>
+			main {
+				width: 960px;
+				max-width: calc(100% - 2em);
+				margin: 0 auto;
+				padding: 3em 1em;
+			}
+			.title {
+				margin-bottom: 1em;
+				padding: 0;
+				text-align: center;
+				line-height: 1;
+			}
+			.title h1 {
+				font-size: 2.5em;
+				margin: 0;
+			}
+			.category-name {
+				color: var(--accent);
+				text-transform: uppercase;
+			}
+			ul {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 2rem;
+				list-style-type: none;
+				margin: 0;
+				padding: 0;
+			}
+			ul li {
+				width: calc(50% - 1rem);
+			}
+			ul li * {
+				text-decoration: none;
+				transition: 0.2s ease;
+			}
+			ul li:first-child {
+				width: 100%;
+				margin-bottom: 1rem;
+				text-align: center;
+			}
+			ul li:first-child img {
+				width: 100%;
+			}
+			ul li:first-child .title {
+				font-size: 2.369rem;
+			}
+			ul li img {
+				margin-bottom: 0.5rem;
+				border-radius: 12px;
+			}
+			ul li a {
+				display: block;
+			}
+			.title {
+				margin: 0;
+				color: rgb(var(--black));
+				line-height: 1;
+			}
+			.date {
+				margin: 0;
+				color: rgb(var(--gray));
+			}
+			.description {
+				margin: 0;
+				color: rgb(var(--gray-dark));
+				line-height: 1.4;
+			}
+			.post-card {
+				background-color: rgb(var(--background-secondary));
+				border-radius: 8px;
+				padding: 1.5em;
+				height: 100%;
+				display: flex;
+				flex-direction: column;
+				transition: transform 0.2s ease, box-shadow 0.2s ease;
+			}
+			.post-card:hover {
+				transform: translateY(-5px);
+				box-shadow: var(--box-shadow);
+			}
+			.tags {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.5em;
+				margin-top: auto;
+				padding-top: 1em;
+			}
+			.tag {
+				background-color: rgba(var(--gray-light), 0.7);
+				color: rgb(var(--gray-dark));
+				padding: 0.3em 0.8em;
+				border-radius: 4px;
+				font-size: 0.8em;
+			}
+			@media (max-width: 720px) {
+				ul {
+					gap: 0.5em;
+				}
+				ul li {
+					width: 100%;
+					text-align: center;
+				}
+				ul li:first-child {
+					margin-bottom: 0;
+				}
+				ul li:first-child .title {
+					font-size: 1.563em;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<section>
+				<div class="title">
+					<h1>Posts in <span class="category-name">{category}</span></h1>
+				</div>
+				<ul>
+					{
+						posts.map((post) => (
+							<li>
+								<a href={`/blog/${post.id}/`}>
+									<div class="post-card">
+										{post.data.heroImage && <img width={720} height={360} src={post.data.heroImage} alt="" />}
+										<h2 class="title">{post.data.title}</h2>
+										<p class="date">
+											<FormattedDate date={post.data.pubDate} />
+										</p>
+										<p class="description">{post.data.description}</p>
+										{post.data.tags && post.data.tags.length > 0 && (
+											<div class="tags">
+												{post.data.tags.map((tag) => (
+													<span class="tag">#{tag}</span>
+												))}
+											</div>
+										)}
+									</div>
+								</a>
+							</li>
+						))
+					}
+				</ul>
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>

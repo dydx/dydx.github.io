@@ -1,0 +1,84 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { SITE_TITLE, SITE_DESCRIPTION } from '../../consts';
+
+// Get all unique tags from blog posts
+const posts = await getCollection('blog');
+const tags = [...new Set(posts.flatMap(post => post.data.tags || []))].sort();
+
+// Count posts for each tag
+const tagCounts = tags.reduce((acc, tag) => {
+  const count = posts.filter(post => post.data.tags && post.data.tags.includes(tag)).length;
+  acc[tag] = count;
+  return acc;
+}, {});
+---
+
+<html lang="en">
+	<head>
+		<BaseHead title={`Tags | ${SITE_TITLE}`} description={SITE_DESCRIPTION} />
+		<style>
+			main {
+				width: 960px;
+				max-width: calc(100% - 2em);
+				margin: 0 auto;
+				padding: 3em 1em;
+			}
+			h1 {
+				text-align: center;
+				margin-bottom: 1em;
+			}
+			.tags-container {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 1em;
+				justify-content: center;
+			}
+			.tag {
+				background-color: rgb(var(--background-secondary));
+				color: rgb(var(--gray-dark));
+				padding: 0.5em 1em;
+				border-radius: 6px;
+				font-size: 1em;
+				display: flex;
+				align-items: center;
+				gap: 0.5em;
+				text-decoration: none;
+				transition: all 0.2s ease;
+			}
+			.tag:hover {
+				background-color: var(--accent);
+				color: rgb(var(--background));
+				transform: translateY(-2px);
+			}
+			.tag-count {
+				background-color: rgba(var(--gray), 0.2);
+				border-radius: 50%;
+				width: 24px;
+				height: 24px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 0.8em;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1>Tags</h1>
+			<div class="tags-container">
+				{tags.map(tag => (
+					<a class="tag" href={`/tags/${tag}`}>
+						#{tag}
+						<span class="tag-count">{tagCounts[tag]}</span>
+					</a>
+				))}
+			</div>
+		</main>
+		<Footer />
+	</body>
+</html>
