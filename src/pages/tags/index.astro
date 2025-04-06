@@ -2,83 +2,164 @@
 import { getCollection } from 'astro:content';
 import BaseHead from '../../components/BaseHead.astro';
 import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
-import { SITE_TITLE, SITE_DESCRIPTION } from '../../consts';
+import { SITE_TITLE } from '../../consts';
 
-// Get all unique tags from blog posts
-const posts = await getCollection('blog');
-const tags = [...new Set(posts.flatMap(post => post.data.tags || []))].sort();
+// Get all tags with counts
+const allPosts = await getCollection('blog');
+const allTags = allPosts.flatMap(post => post.data.tags || []);
+const tagCounts = allTags.reduce((acc, tag) => {
+  acc[tag] = (acc[tag] || 0) + 1;
+  return acc;
+}, {});
+const tags = Object.entries(tagCounts)
+  .sort((a, b) => a[0].localeCompare(b[0])) // Alphabetical sort
+  .map(([tag, count]) => ({ tag, count }));
 
-// Count posts for each tag
-const tagCounts = tags.reduce((acc, tag) => {
-  const count = posts.filter(post => post.data.tags && post.data.tags.includes(tag)).length;
-  acc[tag] = count;
+// Get categories for sidebar
+const categories = [...new Set(allPosts.map(post => post.data.category).filter(Boolean))].sort();
+const categoryCounts = categories.reduce((acc, category) => {
+  const count = allPosts.filter(post => post.data.category === category).length;
+  acc[category] = count;
   return acc;
 }, {});
 ---
 
 <html lang="en">
 	<head>
-		<BaseHead title={`Tags | ${SITE_TITLE}`} description={SITE_DESCRIPTION} />
+		<BaseHead title={`Tags | ${SITE_TITLE}`} description="Browse all post tags" />
 		<style>
-			main {
-				width: 960px;
-				max-width: calc(100% - 2em);
+			.content-grid {
+				display: grid;
+				grid-template-columns: 3fr 1fr;
+				gap: 2rem;
+				max-width: 1200px;
 				margin: 0 auto;
-				padding: 3em 1em;
+				padding: 2rem 1rem;
 			}
-			h1 {
-				text-align: center;
-				margin-bottom: 1em;
+			
+			.page-title {
+				margin-bottom: 2rem;
+				font-size: 2rem;
 			}
-			.tags-container {
+			
+			/* Tags List Style */
+			.tags-section {
+				margin-bottom: 3rem;
+			}
+			.tags-list {
 				display: flex;
-				flex-wrap: wrap;
-				gap: 1em;
-				justify-content: center;
+				flex-direction: column;
+				gap: 0.5rem;
 			}
-			.tag {
-				background-color: rgb(var(--background-secondary));
-				color: rgb(var(--gray-dark));
-				padding: 0.5em 1em;
-				border-radius: 6px;
-				font-size: 1em;
+			.tag-item {
 				display: flex;
-				align-items: center;
-				gap: 0.5em;
+				justify-content: space-between;
+				padding: 0.75rem 0;
+				border-bottom: 1px solid rgba(var(--gray-light), 0.2);
 				text-decoration: none;
-				transition: all 0.2s ease;
+				color: rgb(var(--gray-dark));
+				transition: color 0.2s ease;
 			}
-			.tag:hover {
-				background-color: var(--accent);
-				color: rgb(var(--background));
-				transform: translateY(-2px);
+			.tag-item:last-child {
+				border-bottom: none;
+			}
+			.tag-item:hover {
+				color: var(--accent);
 			}
 			.tag-count {
-				background-color: rgba(var(--gray), 0.2);
-				border-radius: 50%;
-				width: 24px;
-				height: 24px;
+				background-color: rgba(var(--gray-light), 0.2);
+				color: rgb(var(--gray-dark));
+				padding: 0.1rem 0.5rem;
+				border-radius: 4px;
+				font-size: 0.8rem;
+			}
+			.tag-name {
+				font-size: 1.1rem;
+			}
+			
+			/* Sidebar Styles */
+			.sidebar h2 {
+				font-size: 1.2rem;
+				margin-bottom: 1rem;
+				padding-bottom: 0.5rem;
+				border-bottom: 1px solid rgba(var(--gray-light), 0.3);
+				color: rgb(var(--black));
+			}
+			.sidebar section {
+				margin-bottom: 2rem;
+			}
+			.category-list {
 				display: flex;
-				align-items: center;
-				justify-content: center;
-				font-size: 0.8em;
+				flex-direction: column;
+				gap: 0.5rem;
+			}
+			.category-item {
+				display: flex;
+				justify-content: space-between;
+				padding: 0.3rem 0;
+				text-decoration: none;
+				color: rgb(var(--gray-dark));
+				transition: color 0.2s ease;
+			}
+			.category-item:hover {
+				color: var(--accent);
+			}
+			.category-count {
+				background-color: rgba(var(--gray-light), 0.2);
+				color: rgb(var(--gray-dark));
+				padding: 0.1rem 0.4rem;
+				border-radius: 4px;
+				font-size: 0.75rem;
+			}
+			
+			@media (max-width: 900px) {
+				.content-grid {
+					grid-template-columns: 1fr;
+				}
 			}
 		</style>
 	</head>
 	<body>
 		<Header />
-		<main>
-			<h1>Tags</h1>
-			<div class="tags-container">
-				{tags.map(tag => (
-					<a class="tag" href={`/tags/${tag}`}>
-						#{tag}
-						<span class="tag-count">{tagCounts[tag]}</span>
-					</a>
-				))}
-			</div>
-		</main>
-		<Footer />
+		
+		<div class="content-grid">
+			<main>
+				<h1 class="page-title">All Tags</h1>
+				<div class="tags-section">
+					<div class="tags-list">
+						{tags.map(({ tag, count }) => (
+							<a href={`/tags/${tag}`} class="tag-item">
+								<span class="tag-name">#{tag}</span>
+								<span class="tag-count">{count} posts</span>
+							</a>
+						))}
+					</div>
+				</div>
+			</main>
+			
+			<aside class="sidebar">
+				<section>
+					<h2>Categories</h2>
+					<div class="category-list">
+						{categories.map((category) => (
+							<a href={`/categories/${category.toLowerCase()}`} class="category-item">
+								<span>{category}</span>
+								<span class="category-count">{categoryCounts[category]}</span>
+							</a>
+						))}
+					</div>
+				</section>
+				
+				<section>
+					<h2>About</h2>
+					<p>
+						DevOps and SRE professional passionate about cloud technologies, 
+						infrastructure as code, and building reliable systems.
+					</p>
+					<a href="/about" style="color: var(--accent);">More about me →</a>
+				</section>
+			</aside>
+		</div>
+		
 	</body>
 </html>

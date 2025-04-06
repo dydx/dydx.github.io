@@ -2,7 +2,6 @@
 import type { CollectionEntry } from 'astro:content';
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 
 type Props = CollectionEntry<'blog'>['data'];
@@ -15,70 +14,107 @@ const { title, description, pubDate, updatedDate, heroImage, category, tags } = 
 		<BaseHead title={title} description={description} />
 		<style>
 			main {
-				width: calc(100% - 2em);
-				max-width: 100%;
-				margin: 0;
+				max-width: 960px;
+				margin: 0 auto;
+				padding: 2rem 1rem;
 			}
 			.hero-image {
-				width: 100%;
+				margin-bottom: 2rem;
 			}
 			.hero-image img {
 				display: block;
 				margin: 0 auto;
-				border-radius: 12px;
-				box-shadow: var(--box-shadow);
+				max-width: 100%;
+				height: auto;
+				border-radius: 8px;
 			}
-			.prose {
-				width: 720px;
-				max-width: calc(100% - 2em);
-				margin: auto;
-				padding: 1em;
-				color: rgb(var(--gray-dark));
+			.post-header {
+				margin-bottom: 2rem;
 			}
-			.title {
-				margin-bottom: 1em;
-				padding: 1em 0;
-				text-align: center;
-				line-height: 1;
+			.post-title {
+				margin-bottom: 0.5rem;
+				font-size: 2.5rem;
+				line-height: 1.2;
 			}
-			.title h1 {
-				margin: 0 0 0.5em 0;
-			}
-			.date {
-				margin-bottom: 0.5em;
-				color: rgb(var(--gray));
-			}
-			.last-updated-on {
-				font-style: italic;
-			}
-			.metadata {
+			.post-meta {
+				margin-bottom: 1rem;
 				display: flex;
 				flex-wrap: wrap;
-				justify-content: center;
-				gap: 0.5em;
-				margin-bottom: 1em;
+				gap: 1rem;
+				align-items: center;
 			}
-			.category {
+			.post-date {
+				color: rgb(var(--gray));
+				font-size: 0.9rem;
+			}
+			.post-category {
 				background-color: var(--accent);
 				color: rgb(var(--background));
-				padding: 0.3em 0.8em;
+				padding: 0.2em 0.5em;
 				border-radius: 4px;
-				font-size: 0.8em;
+				font-size: 0.7em;
 				font-weight: bold;
 				text-transform: uppercase;
 			}
-			.tags {
+			.post-tags {
 				display: flex;
 				flex-wrap: wrap;
-				justify-content: center;
-				gap: 0.5em;
+				gap: 0.5rem;
+				margin-bottom: 1rem;
 			}
-			.tag {
-				background-color: rgb(var(--background-secondary));
+			.post-tag {
+				background-color: rgba(var(--gray-light), 0.2);
 				color: rgb(var(--gray-dark));
-				padding: 0.3em 0.8em;
+				padding: 0.3rem 0.6rem;
 				border-radius: 4px;
-				font-size: 0.8em;
+				font-size: 0.8rem;
+				text-decoration: none;
+			}
+			.content {
+				color: rgb(var(--gray-dark));
+				line-height: 1.6;
+			}
+			.content :global(h2) {
+				margin-top: 2rem;
+				margin-bottom: 1rem;
+				font-size: 1.75rem;
+			}
+			.content :global(h3) {
+				margin-top: 1.5rem;
+				margin-bottom: 0.75rem;
+				font-size: 1.5rem;
+			}
+			.content :global(p) {
+				margin-bottom: 1.5rem;
+			}
+			.content :global(img) {
+				max-width: 100%;
+				height: auto;
+				border-radius: 8px;
+				margin: 1rem 0;
+			}
+			.content :global(blockquote) {
+				border-left: 4px solid var(--accent);
+				padding-left: 1rem;
+				margin-left: 0;
+				margin-right: 0;
+				font-style: italic;
+			}
+			.content :global(pre) {
+				padding: 1rem;
+				background-color: rgb(var(--background-secondary));
+				border-radius: 4px;
+				overflow-x: auto;
+				margin: 1rem 0;
+			}
+			.back-link {
+				display: inline-block;
+				margin-top: 2rem;
+				color: var(--accent);
+				text-decoration: none;
+			}
+			.back-link:hover {
+				text-decoration: underline;
 			}
 		</style>
 	</head>
@@ -87,36 +123,39 @@ const { title, description, pubDate, updatedDate, heroImage, category, tags } = 
 		<Header />
 		<main>
 			<article>
-				<div class="hero-image">
-					{heroImage && <img width={1020} height={510} src={heroImage} alt="" />}
-				</div>
-				<div class="prose">
-					<div class="title">
-						<div class="date">
-							<FormattedDate date={pubDate} />
-							{
-								updatedDate && (
-									<div class="last-updated-on">
-										Last updated on <FormattedDate date={updatedDate} />
-									</div>
-								)
-							}
-						</div>
-						<h1>{title}</h1>
-						{category && <div class="category">{category}</div>}
-						{tags && tags.length > 0 && (
-							<div class="tags">
-								{tags.map((tag) => (
-									<span class="tag">#{tag}</span>
-								))}
-							</div>
-						)}
-						<hr />
+				{heroImage && (
+					<div class="hero-image">
+						<img src={heroImage} alt={title} />
 					</div>
+				)}
+				
+				<div class="post-header">
+					<h1 class="post-title">{title}</h1>
+					<div class="post-meta">
+						<div class="post-date">
+							<FormattedDate date={pubDate} />
+							{updatedDate && (
+								<span> (Updated: <FormattedDate date={updatedDate} />)</span>
+							)}
+						</div>
+						{category && <div class="post-category">{category}</div>}
+					</div>
+					
+					{tags && tags.length > 0 && (
+						<div class="post-tags">
+							{tags.map((tag) => (
+								<a href={`/tags/${tag}`} class="post-tag">#{tag}</a>
+							))}
+						</div>
+					)}
+				</div>
+				
+				<div class="content">
 					<slot />
 				</div>
+				
+				<a href="/blog" class="back-link">← Back to all posts</a>
 			</article>
 		</main>
-		<Footer />
 	</body>
 </html>

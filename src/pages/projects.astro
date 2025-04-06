@@ -1,0 +1,228 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import { SITE_TITLE } from '../consts';
+
+// You can later fetch these from GitHub API if you want
+const projects = [
+  {
+    name: "Project One",
+    description: "A sample project description. Replace with your actual GitHub projects.",
+    technologies: ["TypeScript", "React", "Node.js"],
+    githubUrl: "https://github.com/dydx/project-one",
+    demoUrl: "https://project-one-demo.example.com"
+  },
+  {
+    name: "Echoes of Void",
+    description: "Ambient electronic album exploring themes of space and isolation. Created using modular synthesis and field recordings.",
+    technologies: ["Ableton Live", "Modular Synthesis", "Field Recording"],
+    listenUrl: "https://open.spotify.com/album/example",
+    isAlbum: true
+  },
+  {
+    name: "Project Three",
+    description: "A third project description. Showcase your best work here.",
+    technologies: ["Go", "Kubernetes", "Terraform"],
+    githubUrl: "https://github.com/dydx/project-three",
+    demoUrl: "https://project-three-demo.example.com"
+  }
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead title={`Projects | ${SITE_TITLE}`} description="A showcase of my GitHub projects and contributions" />
+    <style>
+      .content-grid {
+        display: grid;
+        grid-template-columns: 3fr 1fr;
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+      }
+      
+      .page-title {
+        margin-bottom: 2rem;
+        font-size: 2rem;
+      }
+      
+      .projects-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+      
+      .project-item {
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(var(--gray-light), 0.2);
+      }
+      
+      .project-item:last-child {
+        border-bottom: none;
+      }
+      
+      .project-name {
+        font-size: 1.5rem;
+        margin: 0 0 0.75rem 0;
+        color: rgb(var(--black));
+      }
+      
+      .project-description {
+        color: rgb(var(--gray-dark));
+        margin-bottom: 1rem;
+        line-height: 1.5;
+      }
+      
+      .project-tech {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+      }
+      
+      .tech-tag {
+        background-color: rgba(var(--gray-light), 0.2);
+        color: rgb(var(--gray-dark));
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+      }
+      
+      .project-links {
+        display: flex;
+        gap: 1rem;
+      }
+      
+      .project-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        color: var(--accent);
+        font-size: 0.9rem;
+        transition: color 0.2s ease;
+      }
+      
+      .project-link:hover {
+        color: var(--accent-dark);
+      }
+      
+      .project-link svg {
+        width: 16px;
+        height: 16px;
+      }
+      
+      /* Sidebar Styles */
+      .sidebar h2 {
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(var(--gray-light), 0.3);
+        color: rgb(var(--black));
+      }
+      
+      .sidebar section {
+        margin-bottom: 2rem;
+      }
+      
+      @media (max-width: 900px) {
+        .content-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <Header />
+    
+    <div class="content-grid">
+      <main>
+        <h1 class="page-title">Projects</h1>
+        <div class="projects-list">
+          {projects.map((project) => (
+            <div class="project-item">
+              <h2 class="project-name">{project.name}</h2>
+              <p class="project-description">{project.description}</p>
+              <div class="project-tech">
+                {project.technologies.map((tech) => (
+                  <span class="tech-tag">{tech}</span>
+                ))}
+              </div>
+              <div class="project-links">
+                {project.isAlbum ? (
+                  <a href={project.listenUrl} target="_blank" rel="noopener noreferrer" class="project-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <circle cx="12" cy="12" r="4"></circle>
+                      <line x1="4.93" y1="4.93" x2="9.17" y2="9.17"></line>
+                      <line x1="14.83" y1="14.83" x2="19.07" y2="19.07"></line>
+                      <line x1="14.83" y1="9.17" x2="19.07" y2="4.93"></line>
+                      <line x1="14.83" y1="9.17" x2="18.36" y2="5.64"></line>
+                      <line x1="4.93" y1="19.07" x2="9.17" y2="14.83"></line>
+                    </svg>
+                    Listen on Spotify
+                  </a>
+                ) : (
+                  <>
+                    <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" class="project-link">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                      </svg>
+                      GitHub
+                    </a>
+                    {project.demoUrl && (
+                      <a href={project.demoUrl} target="_blank" rel="noopener noreferrer" class="project-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                          <polyline points="15 3 21 3 21 9"></polyline>
+                          <line x1="10" y1="14" x2="21" y2="3"></line>
+                        </svg>
+                        Live Demo
+                      </a>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </main>
+      
+      <aside class="sidebar">
+        <section>
+          <h2>About These Projects</h2>
+          <p>
+            These projects showcase my technical skills and creative interests. 
+            They represent a mix of software development, music production, and other creative work.
+          </p>
+        </section>
+        
+        <section>
+          <h2>Technologies</h2>
+          <p>
+            I work with a variety of technologies including TypeScript, React, Python, 
+            Go, Kubernetes, Docker, and various cloud platforms.
+          </p>
+        </section>
+        
+        <section>
+          <h2>Music</h2>
+          <p>
+            Besides software development, I also create ambient electronic music using a mix of 
+            digital tools like Ableton Live and analog equipment like modular synthesizers.
+          </p>
+        </section>
+        
+        <section>
+          <h2>Contributions</h2>
+          <p>
+            I contribute to open source projects when I can. You can see more of my 
+            work on my <a href="https://github.com/dydx" target="_blank" rel="noopener noreferrer">GitHub profile</a>.
+          </p>
+        </section>
+      </aside>
+    </div>
+    
+  </body>
+</html>
